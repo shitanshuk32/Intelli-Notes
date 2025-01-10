@@ -55,18 +55,26 @@ const TipTapEditor = ({ note }: Props) => {
     React.useEffect(() => {
         if (!completion || !editor) return;
 
-        const words = completion.split(' ');
+        const text = completion.trim();
+        if (!text) return;
+
+        // Clean up any repeated words that might occur due to streaming issues
+        const cleanedText = text.replace(/(\b\w+\b)(?:\s+\1\b)+/g, '$1');
+        const words = cleanedText.split(' ');
         let index = 0;
 
         const insertNextWord = () => {
             if (index < words.length) {
-                editor.commands.insertContent(words[index] + (index === words.length - 1 ? '' : ' '), {
-                    parseOptions: {
-                        preserveWhitespace: false,
-                    }
-                });
+                const word = words[index];
+                if (word) {  // Only insert if word is not empty
+                    editor.commands.insertContent(word + (index === words.length - 1 ? '' : ' '), {
+                        parseOptions: {
+                            preserveWhitespace: true,
+                        }
+                    });
+                }
                 index++;
-                setTimeout(insertNextWord, 50); // Adjust this delay (in ms) to control typing speed
+                setTimeout(insertNextWord, 50);
             }
         };
 
